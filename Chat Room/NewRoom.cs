@@ -1,21 +1,19 @@
-﻿using MongoDB.Driver;
+﻿using Chat_Room.ChatItems;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Chat_Room
 {
-    public partial class Room : Form
+    public partial class NewRoom : Form
     {
         public IMongoDatabase controldb { get; set; }
         public IMongoCollection<Account> controlAccounts { get; set; }
@@ -45,14 +43,13 @@ namespace Chat_Room
         public IMongoCollection<Account> accounts;
         private Emoji emoji = new Emoji();
 
-        public Room()
+        public NewRoom()
         {
             InitializeComponent();
             for (int i = 0; i < 140; i++)
             {
                 var icon = new EmojiIcon(emoji.Emojis[i]) { textBox = this.textBox };
-                int n = (int)Math.Floor((decimal)(i / 14));
-                icon.Location = new Point(32 * (i % 14), 32 * n);
+                icon.Location = new Point(32*i, 0);
                 emojiContainer.Controls.Add(icon);
             }
         }
@@ -92,17 +89,12 @@ namespace Chat_Room
                     if (message.image != null)
                     {
                         Image img = byteArrayToImage(message.image);
-                        Clipboard.SetImage(img);
-                        chatArea.ReadOnly = false;
-                        chatArea.AppendText($"\n{message.username}: ");
-                        chatArea.Paste();
-                        chatArea.AppendText("\n");
-                        chatArea.ReadOnly = true;
+                        AddImage(img, message.username);
                     }
                     else
                     {
-                        chatArea.AppendText("\n" + message.ToString() + "\n");
-                    }   
+                        AddMessage(message.content, message.username);
+                    }
                 }
                 await task2;
                 await task3;
@@ -132,40 +124,158 @@ namespace Chat_Room
             List<Message> unreceivedMessages = myMessages.Find(filter).ToList();
             foreach (Message m in unreceivedMessages)
             {
-                try
-                {
-                    Notification(m.username);
-                }
-                catch(Exception) { return; }
                 if (!receivedMessages.Contains(m.Id.ToString()))
                 {
+                    try
+                    {
+                        Notification(m.username);
+                    }
+                    catch (Exception) { return; }
                     var messageFilter = Builders<Message>.Filter.Eq("_id", m.Id);
                     receivedMessages.Add(m.Id.ToString());
                     var task = myMessages.UpdateOneAsync(messageFilter, update);
+                    Task task1;
                     if (m.image != null)
                     {
                         try
                         {
                             Image img = byteArrayToImage(m.image);
-                            Clipboard.SetImage(img);
-                            chatArea.ReadOnly = false;
-                            chatArea.AppendText($"\n{m.username}: ");
-                            chatArea.Paste();
-                            chatArea.AppendText("\n");
-                            chatArea.ReadOnly = true;
+                            task1 = Task.Factory.StartNew(() => AddImageIncoming(img, m.username));
                         }
-                        catch(Exception) { return; }
+                        catch (Exception) { return; }
                     }
                     else
                     {
                         try
                         {
-                            chatArea.AppendText("\n" + m.ToString() + "\n");
+                            task1 = Task.Factory.StartNew(() => AddIncoming(m.content, m.username));
                         }
-                        catch(Exception) { return; }
+                        catch (Exception) { return; }
                     }
                     await task;
+                    await task1;
                 }
+            }
+        }
+
+        private void AddImage(Image image, string username)
+        {
+            if (username == this.username)
+            {
+                AddImageOutgoing(image);
+            }
+            else
+            {
+                AddImageIncoming(image, username);
+            }
+        }
+
+        private void AddImageOutgoing(Image image)
+        {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke((MethodInvoker)delegate ()
+                {
+                    var width = (int)Math.Ceiling((decimal)image.Width / 350);
+                    var height = (int)Math.Ceiling((decimal)image.Height / 350);
+                    var c = Math.Max(width, height);
+                    width = (int)Math.Floor((decimal)image.Width / c);
+                    height = (int)Math.Floor((decimal)image.Height / c);
+                    var imageZip = ResizeImage(image, width, height);
+                    var piccontainer = new Panel();
+                    var pic = new PicSent() { Image = imageZip, Size = imageZip.Size, ImageOriginal = image };
+                    pic.Width += 10;
+                    piccontainer.Height = pic.Height + 10;
+                    piccontainer.Controls.Add(pic);
+                    pic.Dock = DockStyle.Right;
+                    panel3.Controls.Add(piccontainer);
+                    piccontainer.Dock = DockStyle.Top;
+                    piccontainer.BringToFront();
+                    ScrollToBottom();
+                });
+            }
+            else
+            {
+                var width = (int)Math.Ceiling((decimal)image.Width / 350);
+                var height = (int)Math.Ceiling((decimal)image.Height / 350);
+                var c = Math.Max(width, height);
+                width = (int)Math.Floor((decimal)image.Width / c);
+                height = (int)Math.Floor((decimal)image.Height / c);
+                var imageZip = ResizeImage(image, width, height);
+                var piccontainer = new Panel();
+                var pic = new PicSent() { Image = imageZip, Size = imageZip.Size, ImageOriginal = image };
+                pic.Width += 10;
+                piccontainer.Height = pic.Height + 10;
+                piccontainer.Controls.Add(pic);
+                pic.Dock = DockStyle.Right;
+                panel3.Controls.Add(piccontainer);
+                piccontainer.Dock = DockStyle.Top;
+                piccontainer.BringToFront();
+                ScrollToBottom();
+            }
+        }
+
+        private void AddImageIncoming(Image image, string user)
+        {
+            
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke((MethodInvoker)delegate ()
+                {
+                    var width = (int)Math.Ceiling((decimal)image.Width / 350);
+                    var height = (int)Math.Ceiling((decimal)image.Height / 350);
+                    var c = Math.Max(width, height);
+                    width = (int)Math.Floor((decimal)image.Width / c);
+                    height = (int)Math.Floor((decimal)image.Height / c);
+                    var imageZip = ResizeImage(image, width, height);
+                    var piccontainer = new Panel();
+                    var pic = new PicSent() { Image = imageZip, Size = imageZip.Size, ImageOriginal = image };
+                    var username = new Label() { Text = user, Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, ((byte)(0))) };
+                    username.Width -= 60;
+                    piccontainer.Height = pic.Height + 10;
+                    piccontainer.Controls.Add(pic);
+                    username.Dock = DockStyle.Left;
+                    piccontainer.Controls.Add(username);
+                    pic.Dock = DockStyle.Left;
+                    panel3.Controls.Add(piccontainer);
+                    piccontainer.Dock = DockStyle.Top;
+                    piccontainer.BringToFront();
+                    ScrollToBottom();
+                });
+            }
+            else
+            {
+                var width = (int)Math.Ceiling((decimal)image.Width / 350);
+                var height = (int)Math.Ceiling((decimal)image.Height / 350);
+                var c = Math.Max(width, height);
+                width = (int)Math.Floor((decimal)image.Width / c);
+                height = (int)Math.Floor((decimal)image.Height / c);
+                var imageZip = ResizeImage(image, width, height);
+                var piccontainer = new Panel();
+                var pic = new PicSent() { Image = imageZip, Size = imageZip.Size, ImageOriginal = image };
+                var username = new Label() { Text = user, Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, ((byte)(0))) };
+                username.Width -= 60;
+                piccontainer.Height = pic.Height + 10;
+                piccontainer.Controls.Add(pic);
+                username.Dock = DockStyle.Left;
+                piccontainer.Controls.Add(username);
+                pic.Dock = DockStyle.Left;
+                panel3.Controls.Add(piccontainer);
+                piccontainer.Dock = DockStyle.Top;
+                piccontainer.BringToFront();
+                ScrollToBottom();
+            }
+        }
+
+        private void AddMessage(string content, string username)
+        {
+            if (username == this.username)
+            {
+                AddOutgoing(content, username);
+            }
+            else
+            {
+                AddIncoming(content, username);
             }
         }
 
@@ -193,10 +303,10 @@ namespace Chat_Room
         {
             var someone = accounts.Find(s => s.typing == true && s.username != username).FirstOrDefault();
             if (someone != null)
-            { 
+            {
                 try
                 {
-                    label2.Text = "Someone is typing...";
+                    label3.Text = "Someone is typing...";
                 }
                 catch (Exception) { return; }
             }
@@ -204,7 +314,7 @@ namespace Chat_Room
             {
                 try
                 {
-                    label2.Text = "";
+                    label3.Text = "";
                 }
                 catch (Exception) { return; }
             }
@@ -218,35 +328,93 @@ namespace Chat_Room
             t1.IsBackground = true;
             t2.IsBackground = true;
             t3.IsBackground = true;
-            t1.SetApartmentState(ApartmentState.STA);
-            t2.SetApartmentState(ApartmentState.STA);
-            t3.SetApartmentState(ApartmentState.STA);
             t1.Start();
             t2.Start();
             t3.Start();
         }
 
-        private void SendMessage(object img)
+        private void AddIncoming(string message, string username)
         {
-            Image image = (Image)img;
-            string text = textBox.Text;
-            Message message;
-            textBox.Text = string.Empty;
-            if (image != null)
+            if (this.InvokeRequired)
             {
-                message = new Message() { username = username, content = "", received = false, time = DateTime.Now, image = imageToByteArray(image) };
-                chatArea.ReadOnly = false;
-                chatArea.AppendText($"\n{username}: ");
-                chatArea.Paste();
-                chatArea.AppendText("\n");
-                chatArea.ReadOnly = true;
+                this.BeginInvoke((MethodInvoker)delegate ()
+                {
+                    var bubblechat = new Panel();
+                    var bubble = new Incoming() { username = username, content = message };
+                    bubblechat.Height = bubble.Height;
+                    bubblechat.Controls.Add(bubble);
+                    bubble.Dock = DockStyle.Left;
+                    panel3.Controls.Add(bubblechat);
+                    bubblechat.BringToFront();
+                    bubblechat.Dock = DockStyle.Top;
+                    ScrollToBottom();
+                });
             }
             else
             {
-                message = new Message() { username = username, content = text, received = false, time = DateTime.Now, image = null };
-                chatArea.AppendText("\n" + message.ToString() + "\n");
+                var bubblechat = new Panel();
+                var bubble = new Incoming() { username = username, content = message };
+                bubblechat.Height = bubble.Height;
+                bubblechat.Controls.Add(bubble);
+                bubble.Dock = DockStyle.Left;
+                panel3.Controls.Add(bubblechat);
+                bubblechat.BringToFront();
+                bubblechat.Dock = DockStyle.Top;
+                ScrollToBottom();
             }
-            var myAcc = accounts.Find(s => s.username == username).FirstOrDefault();
+        }
+
+        private void AddOutgoing(string message, string username)
+        {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke((MethodInvoker)delegate ()
+                {
+                    var bubblechat = new Panel();
+                    var bubble = new Outgoing() { username = username, content = message };
+                    bubblechat.Height = bubble.Height;
+                    bubblechat.Controls.Add(bubble);
+                    bubble.Dock = DockStyle.Right;
+                    panel3.Controls.Add(bubblechat);
+                    bubblechat.BringToFront();
+                    bubblechat.Dock = DockStyle.Top;
+                    ScrollToBottom();
+                });
+            }
+            else
+            {
+                var bubblechat = new Panel();
+                var bubble = new Outgoing() { username = username, content = message };
+                bubblechat.Height = bubble.Height;
+                bubblechat.Controls.Add(bubble);
+                bubble.Dock = DockStyle.Right;
+                panel3.Controls.Add(bubblechat);
+                bubblechat.BringToFront();
+                bubblechat.Dock = DockStyle.Top;
+                ScrollToBottom();
+            }
+            
+        }
+
+        private async Task SendMessage(object img)
+        {
+            Task task;
+            Image image = (Image)img;
+            string text = textBox.Text;
+            Message message;
+            if (image != null)
+            {
+                task = Task.Factory.StartNew(() => AddImageOutgoing(image));
+                message = new Message() { username = username, content = null, received = false, time = DateTime.Now, image = imageToByteArray(image) };
+            }
+            else
+            {
+                textBox.Text = string.Empty;
+                SendKeys.SendWait("{Backspace}");
+                message = new Message() { username = username, content = text, received = false, time = DateTime.Now, image = null };
+                task = Task.Factory.StartNew(() => AddOutgoing(message.content, message.username));
+            }
+            var myAcc = this.accounts.Find(s => s.username == username).FirstOrDefault();
             var contactList = myAcc.contacts;
             var tasks = new List<Task>();
             Parallel.ForEach(contactList, user =>
@@ -256,42 +424,32 @@ namespace Chat_Room
                 tasks.Add(t);
             });
             var LastTask = messages.InsertOneAsync(message);
-            Parallel.ForEach(tasks, async task =>
+            Parallel.ForEach(tasks, async t =>
             {
-                await task;
+                await t;
             });
+            await LastTask;
+            await task;
         }
 
-        private void textBox_KeyDown(object sender, KeyEventArgs e)
+        private async void textBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
+            if (e.KeyCode == Keys.Enter && (e.Modifiers & Keys.Shift) != Keys.Shift)
             {
                 if (!string.IsNullOrWhiteSpace(textBox.Text))
                 {
-                    Thread t = new Thread(SendMessage);
-                    t.Start(null);
+                    await SendMessage(null);
                 }
                 e.SuppressKeyPress = true;
             }
         }
 
-        private void buttonSend_Click(object sender, EventArgs e)
+        private async void buttonSend_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(textBox.Text))
             {
-                Thread t = new Thread(SendMessage);
-                t.Start(null);
+                await SendMessage(null);
             }
-        }
-
-        private void buttonSend_MouseHover(object sender, EventArgs e)
-        {
-            buttonSend.IconColor = Color.HotPink;
-        }
-
-        private void buttonSend_MouseLeave(object sender, EventArgs e)
-        {
-            buttonSend.IconColor = Color.DimGray;
         }
 
         private async void Room_FormClosed(object sender, FormClosedEventArgs e)
@@ -319,17 +477,17 @@ namespace Chat_Room
             {
                 try
                 {
-                    label3.Text = "Online: 1 user";
+                    label2.Text = "Online: 1 user";
                 }
-                catch(Exception) { return; }
+                catch (Exception) { return; }
             }
             else
             {
                 try
                 {
-                    label3.Text = $"Online: {c} users";
+                    label2.Text = $"Online: {c} users";
                 }
-                catch(Exception) { return; }
+                catch (Exception) { return; }
             }
         }
 
@@ -337,7 +495,6 @@ namespace Chat_Room
         {
             Thread t = new Thread(OnlineCheck);
             t.IsBackground = true;
-            t.SetApartmentState(ApartmentState.STA);
             t.Start();
         }
 
@@ -366,7 +523,7 @@ namespace Chat_Room
             return destImage;
         }
 
-        private void buttonImage_Click(object sender, EventArgs e)
+        private async void buttonImage_Click(object sender, EventArgs e)
         {
             OpenFileDialog open = new OpenFileDialog();
             open.Filter = "Image Files(*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png";
@@ -381,22 +538,14 @@ namespace Chat_Room
                 else
                 {
                     var img = Image.FromFile(open.FileName);
-                    var width = (int)Math.Ceiling((decimal)img.Width / 300);
-                    var height = (int)Math.Ceiling((decimal)img.Height / 300);
-                    var c = Math.Max(width, height);
-                    width = (int)Math.Floor((decimal)img.Width / c);
-                    height = (int)Math.Floor((decimal)img.Height / c);
-                    img = ResizeImage(img, width, height);
-                    Clipboard.SetImage(img);
-                    Thread t = new Thread(SendMessage);
-                    t.Start(img);
+                    await SendMessage(img);
                 }
             }
         }
 
         private void buttonImage_MouseHover(object sender, EventArgs e)
         {
-            buttonImage.IconColor = Color.HotPink;
+            buttonImage.IconColor = Color.FromArgb(0, 140, 255);
         }
 
         private void buttonImage_MouseLeave(object sender, EventArgs e)
@@ -411,7 +560,7 @@ namespace Chat_Room
 
         private void iconButton1_MouseHover(object sender, EventArgs e)
         {
-            iconButton1.IconColor = Color.HotPink;
+            iconButton1.IconColor = Color.FromArgb(0, 140, 255);
         }
 
         private void iconButton1_MouseLeave(object sender, EventArgs e)
@@ -421,7 +570,7 @@ namespace Chat_Room
 
         private void infoButton_Click(object sender, EventArgs e)
         {
-            var onlineUsers = new InfoShow() { roomAccounts = roomAccounts, infoType = "users", accounts = controlAccounts, room = this};
+            var onlineUsers = new InfoShow() { roomAccounts = roomAccounts, infoType = "users", accounts = controlAccounts, room = this };
             onlineUsers.Show();
         }
 
@@ -442,7 +591,7 @@ namespace Chat_Room
 
         private void infoButton_MouseHover(object sender, EventArgs e)
         {
-            infoButton.IconColor = Color.HotPink;
+            infoButton.IconColor = Color.FromArgb(0, 140, 255);
         }
 
         private void infoButton_MouseLeave(object sender, EventArgs e)
@@ -459,6 +608,12 @@ namespace Chat_Room
         {
             timer1.Stop();
             timer2.Stop();
+        }
+
+        private void ScrollToBottom()
+        {
+            panel3.VerticalScroll.Value = panel3.VerticalScroll.Maximum;
+            panel3.PerformLayout();
         }
     }
 }

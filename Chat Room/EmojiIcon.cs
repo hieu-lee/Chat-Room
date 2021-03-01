@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using Bunifu.UI.WinForms;
 
 namespace Chat_Room
 {
     public class EmojiIcon:Button
     {
-        public TextBox textBox { get; set; }
+        public BunifuTextBox textBox { get; set; }
         public string icon;
         public EmojiIcon(string _icon)
         {

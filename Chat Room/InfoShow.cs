@@ -20,7 +20,7 @@ namespace Chat_Room
         public string infoType { get; set; }
         public List<Account> roomAccounts { get; set; } = null;
         public List<ChatRoom> publicRooms { get; set; } = null;
-        public Room room;
+        public NewRoom room { get; set; } = null;
 
         public InfoShow()
         {
@@ -61,8 +61,8 @@ namespace Chat_Room
 
         private void OnlineUsers_Load(object sender, EventArgs e)
         {
-            var c = 1;
-            try
+            var c = 1;     
+            if (infoType == "users")
             {
                 if (room.noti)
                 {
@@ -74,18 +74,6 @@ namespace Chat_Room
                     checkBox2.Checked = true;
                     checkBox2.CheckState = CheckState.Checked;
                 }
-            }
-            catch (NullReferenceException)
-            {
-                checkBox1.Visible = false;
-                checkBox2.Visible = false;
-                label2.Text = "";
-                iconButton2.Visible = false;
-            }
-
-           
-            if (infoType == "users")
-            {
                 label1.Text = "Current room's users";
                 var onlineAccsSet = new HashSet<string>();
                 Parallel.ForEach(roomAccounts, acc =>
@@ -116,6 +104,10 @@ namespace Chat_Room
             }
             else if (infoType == "rooms")
             {
+                checkBox1.Visible = false;
+                checkBox2.Visible = false;
+                label2.Text = "";
+                iconButton2.Visible = false;
                 label1.Text = "Currently pulbic rooms";
                 foreach (ChatRoom room in publicRooms)
                 {
@@ -181,7 +173,7 @@ namespace Chat_Room
 
         private void iconButton2_MouseHover(object sender, EventArgs e)
         {
-            iconButton2.IconColor = Color.HotPink;
+            iconButton2.IconColor = Color.FromArgb(0, 140, 255);
         }
 
         private void iconButton2_MouseLeave(object sender, EventArgs e)

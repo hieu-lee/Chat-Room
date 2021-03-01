@@ -22,23 +22,16 @@ namespace Chat_Room
             InitializeComponent();
         }
 
-        private void checkBox1_Click(object sender, EventArgs e)
-        {
-            if (checkBox1.Checked)
-            {
-                passwordBox.UseSystemPasswordChar = false;
-            }
-            else
-            {
-                passwordBox.UseSystemPasswordChar = true;
-            }
-        }
+        //private void iconRight_Click(object sender, EventArgs e)
+        //{
+        //    passwordBox.UseSystemPasswordChar = !passwordBox.UseSystemPasswordChar;
+        //}
 
         private void Login_Load(object sender, EventArgs e)
         {
             try
             {
-                client = new MongoClient("mongodb+srv://<username>:<password>@cluster0.n2h9d.mongodb.net/chatroom?retryWrites=true&w=majority");
+                client = new MongoClient("mongodb+srv://izumi_sagiri:phamleha@cluster0.5eyuc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
                 database = client.GetDatabase("AppManagement");
                 accounts = database.GetCollection<Account>("accounts");
             }

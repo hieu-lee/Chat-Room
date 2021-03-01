@@ -36,9 +36,31 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>paper-plane-32.ico</ApplicationIcon>
+    <ApplicationIcon>paper-plane-blue.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Bunifu.Licensing, Version=3.2.0.0, Culture=neutral, PublicKeyToken=f89b4760ba7dcb6b" />
+    <Reference Include="Bunifu.UI.WinForms.BunifuButton">
+      <HintPath>..\..\..\..\Desktop\bunifu ui\Bunifu UI WinForms v4.1.1\Bunifu.UI.WinForms.BunifuButton.dll</HintPath>
+    </Reference>
+    <Reference Include="Bunifu.UI.WinForms.BunifuImageButton">
+      <HintPath>..\..\..\..\Desktop\bunifu ui\Bunifu UI WinForms v4.1.1\Bunifu.UI.WinForms.BunifuImageButton.dll</HintPath>
+    </Reference>
+    <Reference Include="Bunifu.UI.WinForms.BunifuPictureBox">
+      <HintPath>..\..\..\..\Desktop\bunifu ui\Bunifu UI WinForms v4.1.1\Bunifu.UI.WinForms.BunifuPictureBox.dll</HintPath>
+    </Reference>
+    <Reference Include="Bunifu.UI.WinForms.BunifuRadioButton">
+      <HintPath>..\..\..\..\Desktop\bunifu ui\Bunifu UI WinForms v4.1.1\Bunifu.UI.WinForms.BunifuRadioButton.dll</HintPath>
+    </Reference>
+    <Reference Include="Bunifu.UI.WinForms.BunifuSeparator">
+      <HintPath>..\..\..\..\Desktop\bunifu ui\Bunifu UI WinForms v4.1.1\Bunifu.UI.WinForms.BunifuSeparator.dll</HintPath>
+    </Reference>
+    <Reference Include="Bunifu.UI.WinForms.BunifuTextbox">
+      <HintPath>..\..\..\..\Desktop\bunifu ui\Bunifu UI WinForms v4.1.1\Bunifu.UI.WinForms.BunifuTextbox.dll</HintPath>
+    </Reference>
+    <Reference Include="Bunifu.UI.WinForms.BunifuUserControl">
+      <HintPath>..\..\..\..\Desktop\bunifu ui\Bunifu UI WinForms v4.1.1\Bunifu.UI.WinForms.BunifuUserControl.dll</HintPath>
+    </Reference>
     <Reference Include="DnsClient, Version=1.4.0.0, Culture=neutral, PublicKeyToken=4574bb5573c51424, processorArchitecture=MSIL">
       <HintPath>..\packages\DnsClient.1.4.0\lib\net471\DnsClient.dll</HintPath>
     </Reference>
@@ -66,6 +88,7 @@
     </Reference>
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Design" />
     <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
       <Private>True</Private>
@@ -130,6 +153,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Account.cs" />
+    <Compile Include="ChatItems\Outgoing.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ChatItems\Outgoing.Designer.cs">
+      <DependentUpon>Outgoing.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChatItems\Incoming.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ChatItems\Incoming.Designer.cs">
+      <DependentUpon>Incoming.cs</DependentUpon>
+    </Compile>
     <Compile Include="ChatRoom.cs" />
     <Compile Include="Emoji.cs" />
     <Compile Include="EmojiIcon.cs">
@@ -147,17 +182,20 @@
     <Compile Include="InfoShow.Designer.cs">
       <DependentUpon>InfoShow.cs</DependentUpon>
     </Compile>
+    <Compile Include="NewRoom.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NewRoom.Designer.cs">
+      <DependentUpon>NewRoom.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PicSent.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Room Join.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Room Join.Designer.cs">
       <DependentUpon>Room Join.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Room.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Room.Designer.cs">
-      <DependentUpon>Room.cs</DependentUpon>
     </Compile>
     <Compile Include="Message.cs" />
     <Compile Include="Program.cs" />
@@ -168,12 +206,23 @@
     <Compile Include="Sign Up.Designer.cs">
       <DependentUpon>Sign Up.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils.cs" />
+    <EmbeddedResource Include="ChatItems\Outgoing.resx">
+      <DependentUpon>Outgoing.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ChatItems\Incoming.resx">
+      <DependentUpon>Incoming.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Login.resx">
       <DependentUpon>Login.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InfoShow.resx">
       <DependentUpon>InfoShow.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="NewRoom.resx">
+      <DependentUpon>NewRoom.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\licenses.licx" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -186,9 +235,6 @@
     </Compile>
     <EmbeddedResource Include="Room Join.resx">
       <DependentUpon>Room Join.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Room.resx">
-      <DependentUpon>Room.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Sign Up.resx">
       <DependentUpon>Sign Up.cs</DependentUpon>
@@ -215,6 +261,8 @@
     <Content Include="Core\Compression\Zstandard\lib\win\libzstd.dll" />
     <Content Include="mongocrypt.dll" />
     <Content Include="paper-plane-32.ico" />
+    <Content Include="paper-plane-blue.ico" />
+    <None Include="Resources\reply.png" />
     <None Include="Resources\paper-plane-32.ico" />
     <None Include="Resources\default-avatar.png" />
     <None Include="Resources\shinobu.png" />

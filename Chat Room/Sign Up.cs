@@ -137,7 +137,7 @@ namespace Chat_Room
                 else
                 {
                     var img = Image.FromFile(open.FileName);
-                    img = ResizeImage(img, 107, 96);
+                    img = ResizeImage(img, 100, 100);
                     avatarBox.Image = img;
                 }
             }

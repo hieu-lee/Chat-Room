@@ -35,14 +35,17 @@ namespace Chat_Room
             {
                 string text = "";
                 int c = 1;
-                foreach (string id in account.rooms)
+                if (account.rooms != null)
                 {
-                    var roomdb = client.GetDatabase($"#{id}");
-                    var unread = roomdb.GetCollection<Message>($"{account.username} receives").CountDocuments(s => true);
-                    text += $"{c}. #{id}\n{unread} unread message(s)\n";
-                    c++;
+                    foreach (string id in account.rooms)
+                    {
+                        var roomdb = client.GetDatabase($"#{id}");
+                        var unread = roomdb.GetCollection<Message>($"{account.username} receives").CountDocuments(s => true);
+                        text += $"{c}. #{id}\n{unread} unread message(s)\n";
+                        c++;
+                    }
+                    roomsBox.Text = text;
                 }
-                roomsBox.Text = text;
             }
         }
 
@@ -123,7 +126,7 @@ namespace Chat_Room
             return true;
         }
 
-        private void JoinRoom(string id, string pass)
+        private async void JoinRoom(string id, string pass)
         {
             var room = chatRooms.Find(s => s.Id == id).FirstOrDefault();
             if (room != null)
@@ -149,8 +152,9 @@ namespace Chat_Room
                             var filter = Builders<Account>.Filter.Eq("_id", myAcc.username);
                             var update = Builders<Account>.Update.Set("connected", true);
                             roomAccounts.UpdateOne(filter, update);
-                            var ChatRoom = new Room() { username = myAcc.username, database = joinRoomdb, name = $"#{room.Id}: {room.name}", label = room.name, controlAccounts = accounts, Id = room.Id, controldb = database };
+                            var ChatRoom = new NewRoom() { username = myAcc.username, database = joinRoomdb, name = $"#{room.Id}: {room.name}", label = room.name, controlAccounts = accounts, Id = room.Id, controldb = database };
                             ChatRoom.Show();
+                            this.FormClosing += new FormClosingEventHandler((object sender, FormClosingEventArgs e) => { ChatRoom.Close(); });
                         }
                     }
                     else
@@ -160,12 +164,10 @@ namespace Chat_Room
                         var tempava = account.avatar;
                         var filterRooms = Builders<Account>.Filter.Eq("_id", account.username);
                         var updateRooms = Builders<Account>.Update.Set("rooms", account.rooms);
-                        accounts.UpdateOneAsync(filterRooms, updateRooms);
+                        var task1 = accounts.UpdateOneAsync(filterRooms, updateRooms);
                         account.avatar = null;
                         account.rooms = null;
-                        roomAccounts.InsertOneAsync(account);
-                        account.avatar = tempava;
-                        account.rooms = temprooms;
+                        var task2 = roomAccounts.InsertOneAsync(account);
                         var contactAccs = roomAccounts.Find(s => s.username != account.username).ToList();
                         var myContacts = new HashSet<string>();
                         Parallel.ForEach(contactAccs, acc =>
@@ -178,10 +180,16 @@ namespace Chat_Room
                         });
                         var filter = Builders<Account>.Filter.Eq("_id", account.username);
                         var update = Builders<Account>.Update.Set("contacts", myContacts);
-                        roomAccounts.UpdateOneAsync(filter, update);
+                        var task3 = roomAccounts.UpdateOneAsync(filter, update);
                         joinRoomdb.CreateCollection($"{account.username} receives");
-                        var ChatRoom = new Room() { username = account.username, database = joinRoomdb, name = $"#{room.Id}: {room.name}", label = room.name, controlAccounts = accounts, Id = room.Id, controldb = database };
+                        var ChatRoom = new NewRoom() { username = account.username, database = joinRoomdb, name = $"#{room.Id}: {room.name}", label = room.name, controlAccounts = accounts, Id = room.Id, controldb = database };
+                        await task1;
+                        await task2;
+                        await task3;
+                        account.avatar = tempava;
+                        account.rooms = temprooms;
                         ChatRoom.Show();
+                        this.FormClosing += new FormClosingEventHandler((object sender, FormClosingEventArgs e) => { ChatRoom.Close(); });
                     }
                 }
             }
@@ -209,7 +217,7 @@ namespace Chat_Room
             JoinRoom(id, pass);
         }
 
-        private void CreateRoom(string id, string pass, string name)
+        private async void CreateRoom(string id, string pass, string name)
         {
             try
             {
@@ -222,21 +230,29 @@ namespace Chat_Room
                 {
                     myRoom = new ChatRoom() { Id = id, name = name, password = pass };
                 }
-                chatRooms.InsertOne(myRoom);
+                var task1 = chatRooms.InsertOneAsync(myRoom);
                 account.rooms.Add(id);
                 var filterRooms = Builders<Account>.Filter.Eq("_id", account.username);
                 var updateRooms = Builders<Account>.Update.Set("rooms", account.rooms);
-                accounts.UpdateOneAsync(filterRooms, updateRooms);
+                var task2 = accounts.UpdateOneAsync(filterRooms, updateRooms);
                 var newRoomdb = client.GetDatabase($"#{id}");
                 newRoomdb.CreateCollection("accounts");
                 newRoomdb.CreateCollection("messages");
                 newRoomdb.CreateCollection($"{account.username} receives");
                 var roomAccs = newRoomdb.GetCollection<Account>("accounts");
+                var temprooms = account.rooms;
+                var tempava = account.avatar;
                 account.avatar = null;
                 account.rooms = null;
-                roomAccs.InsertOneAsync(account);
-                var ChatRoom = new Room() { username = account.username, database = newRoomdb, name = $"#{myRoom.Id}: {myRoom.name}", label = myRoom.name, controlAccounts = accounts, Id = myRoom.Id, controldb = database };
+                var task3 = roomAccs.InsertOneAsync(account);
+                var ChatRoom = new NewRoom() { username = account.username, database = newRoomdb, name = $"#{myRoom.Id}: {myRoom.name}", label = myRoom.name, controlAccounts = accounts, Id = myRoom.Id, controldb = database };
+                await task1;
+                await task2;
+                await task3;
+                account.avatar = tempava;
+                account.rooms = temprooms;
                 ChatRoom.Show();
+                this.FormClosing += new FormClosingEventHandler((object sender, FormClosingEventArgs e) => { ChatRoom.Close(); });
             }
             catch (Exception)
             {
@@ -268,10 +284,10 @@ namespace Chat_Room
             CreateRoom(id, pass, name);
         }
 
-        private void checkBox1_MouseClick(object sender, MouseEventArgs e)
-        {
-            boxPassword.UseSystemPasswordChar = (!checkBox1.Checked);
-        }
+        //private void checkBox1_MouseClick(object sender, MouseEventArgs e)
+        //{
+        //    boxPassword.UseSystemPasswordChar = (!checkBox1.Checked);
+        //}
 
         private void Room_Join_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -295,7 +311,7 @@ namespace Chat_Room
                 else
                 {
                     var img = Image.FromFile(open.FileName);
-                    img = ResizeImage(img, 107, 96);
+                    img = ResizeImage(img, 100, 100);
                     avatarBox.Image = img;
                     ImageConverter imgCon = new ImageConverter();
                     var avatar = (byte[])imgCon.ConvertTo(img, typeof(byte[]));
@@ -342,6 +358,16 @@ namespace Chat_Room
             {
                 LogOut();
             }
+        }
+
+        private void iconButton2_MouseHover(object sender, EventArgs e)
+        {
+            iconButton2.IconColor = Color.FromArgb(0, 140, 255);
+        }
+
+        private void iconButton2_MouseLeave(object sender, EventArgs e)
+        {
+            iconButton2.IconColor = Color.DimGray;
         }
     }
 }
