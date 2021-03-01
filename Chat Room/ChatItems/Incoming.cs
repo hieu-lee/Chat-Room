@@ -55,7 +55,7 @@ namespace Chat_Room.ChatItems
             label1.Location = new Point(15, 12);
             label2.Width = Math.Max(Utils.GetTextWidth(label2), Utils.GetTextWidth(label1)) + 10;
             bunifuUserControl1.Width = Math.Max(label2.Left + bunifuUserControl1.Top + label2.Width, label1.Left + bunifuUserControl1.Top + label1.Width);
-            this.Width = bunifuUserControl1.Right + 10 + replyButton.Width;
+            this.Width = bunifuUserControl1.Right + 10;
         }
 
         private void Incoming_Resize(object sender, EventArgs e)

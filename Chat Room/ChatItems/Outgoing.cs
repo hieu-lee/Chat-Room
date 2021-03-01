@@ -49,7 +49,6 @@ namespace Chat_Room.ChatItems
             label1.Location = new Point(199, 12);
             label2.Height = Utils.GetTextHeight(label2) + 10;
             bunifuUserControl1.Height = label2.Top + bunifuUserControl1.Top + label2.Height;
-            replyButton.Location = new Point(203, bunifuUserControl1.Height/2 - 10);
             this.Height = bunifuUserControl1.Bottom + 10;
         }
 
