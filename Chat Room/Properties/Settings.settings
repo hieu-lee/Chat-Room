@@ -1,7 +1,15 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)">
-  <Profiles>
-    <Profile Name="(Default)" />
-  </Profiles>
-  <Settings />
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Chat_Room.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="mongolink" Type="System.String" Scope="User">
+      <Value Profile="(Default)">mongodb+srv://&lt;username&gt;:&lt;password&gt;@cluster0.ja87m.mongodb.net/myFirstDatabase?retryWrites=true&amp;w=majority</Value>
+    </Setting>
+    <Setting Name="emailaddress" Type="System.String" Scope="User">
+      <Value Profile="(Default)">&lt;emailaddress&gt;</Value>
+    </Setting>
+    <Setting Name="emailpassword" Type="System.String" Scope="User">
+      <Value Profile="(Default)">&lt;emailpassword&gt;</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>

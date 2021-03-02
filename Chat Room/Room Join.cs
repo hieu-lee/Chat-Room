@@ -131,7 +131,7 @@ namespace Chat_Room
             var room = chatRooms.Find(s => s.Id == id).FirstOrDefault();
             if (room != null)
             {
-                if (!room.state && room.password != pass)
+                if (!room.state && room.password != Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)))
                 {
                     MessageBox.Show("Your room's password is incorrect, please re-type the room's password", "Incorrect room's password");
                     return;
@@ -228,7 +228,7 @@ namespace Chat_Room
                 }
                 else
                 {
-                    myRoom = new ChatRoom() { Id = id, name = name, password = pass };
+                    myRoom = new ChatRoom() { Id = id, name = name, password = Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)) };
                 }
                 var task1 = chatRooms.InsertOneAsync(myRoom);
                 account.rooms.Add(id);
@@ -283,11 +283,6 @@ namespace Chat_Room
             }
             CreateRoom(id, pass, name);
         }
-
-        //private void checkBox1_MouseClick(object sender, MouseEventArgs e)
-        //{
-        //    boxPassword.UseSystemPasswordChar = (!checkBox1.Checked);
-        //}
 
         private void Room_Join_FormClosed(object sender, FormClosedEventArgs e)
         {

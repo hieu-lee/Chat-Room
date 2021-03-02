@@ -11,6 +11,8 @@ namespace Chat_Room
     {
         [BsonId]
         public string username { get; set; }
+        [BsonElement("email")]
+        public string email { get; set; }
         [BsonElement("password")]
         public string password { get; set; }
         [BsonElement("connected")]

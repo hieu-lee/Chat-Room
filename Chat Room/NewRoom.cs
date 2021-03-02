@@ -7,6 +7,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -42,6 +43,20 @@ namespace Chat_Room
         private IMongoCollection<Message> messages;
         public IMongoCollection<Account> accounts;
         private Emoji emoji = new Emoji();
+
+        private string Base64StringEncode(string text)
+        {
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(text));
+        }
+
+        private string Base64StringDecode(string encodedString)
+        {
+            var bytes = Convert.FromBase64String(encodedString);
+
+            var decodedString = Encoding.UTF8.GetString(bytes);
+
+            return decodedString;
+        }
 
         public NewRoom()
         {
@@ -93,6 +108,7 @@ namespace Chat_Room
                     }
                     else
                     {
+                        message.content = Base64StringDecode(message.content);
                         AddMessage(message.content, message.username);
                     }
                 }
@@ -148,6 +164,7 @@ namespace Chat_Room
                     {
                         try
                         {
+                            m.content = Base64StringDecode(m.content);
                             task1 = Task.Factory.StartNew(() => AddIncoming(m.content, m.username));
                         }
                         catch (Exception) { return; }
@@ -398,6 +415,7 @@ namespace Chat_Room
 
         private async Task SendMessage(object img)
         {
+            var taskFindAcc = this.accounts.Find(s => s.username == username).FirstOrDefaultAsync();
             Task task;
             Image image = (Image)img;
             string text = textBox.Text;
@@ -412,9 +430,10 @@ namespace Chat_Room
                 textBox.Text = string.Empty;
                 SendKeys.SendWait("{Backspace}");
                 message = new Message() { username = username, content = text, received = false, time = DateTime.Now, image = null };
-                task = Task.Factory.StartNew(() => AddOutgoing(message.content, message.username));
+                task = Task.Factory.StartNew(() => AddOutgoing(text, message.username));
             }
-            var myAcc = this.accounts.Find(s => s.username == username).FirstOrDefault();
+            message.content = Base64StringEncode(message.content);
+            var myAcc = await taskFindAcc;
             var contactList = myAcc.contacts;
             var tasks = new List<Task>();
             Parallel.ForEach(contactList, user =>
@@ -465,13 +484,9 @@ namespace Chat_Room
             }
         }
 
-        private void OnlineCheck()
+        private async void OnlineCheck()
         {
-            Thread t = new Thread(() =>
-            {
-                roomAccounts = accounts.Find(s => true).ToList();
-            });
-            t.Start();
+            var task = accounts.Find(s => true).ToListAsync();
             var c = accounts.CountDocuments(s => s.connected);
             if (c == 1)
             {
@@ -489,6 +504,7 @@ namespace Chat_Room
                 }
                 catch (Exception) { return; }
             }
+            roomAccounts = await task;
         }
 
         private void timer2_Tick(object sender, EventArgs e)
@@ -519,7 +535,6 @@ namespace Chat_Room
                     graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
                 }
             }
-
             return destImage;
         }
 

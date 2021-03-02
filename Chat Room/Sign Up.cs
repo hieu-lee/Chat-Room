@@ -1,23 +1,21 @@
 ﻿using MongoDB.Driver;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace Chat_Room
 {
     public partial class Sign_Up : Form
     {
+        private string email;
         public MongoClient client { get; set; }
         public IMongoDatabase database { get; set; }
         public IMongoCollection<Account> accounts { get; set; }
+        public IMongoCollection<Email> emails;
         public Sign_Up()
         {
             InitializeComponent();
@@ -47,7 +45,7 @@ namespace Chat_Room
             return destImage;
         }
 
-        private async void CreateAccount()
+        private void CreateAccount()
         {
             usernameBox.Text = usernameBox.Text.Trim();
             if (passwordBox.Text.Contains(' ') || passwordBox.Text.Length < 6)
@@ -69,21 +67,35 @@ namespace Chat_Room
                     return;
                 }
             }
+            if (!ValidateEmail()) 
+            {
+                MessageBox.Show("Your email is invalid", "Invalid email");
+                return;
+            }
             try
             {
+                var myuser = accounts.Find(s => s.username == usernameBox.Text).FirstOrDefault();
+                if (myuser != null)
+                {
+                    MessageBox.Show("Your username has been taken", "Invalid username");
+                    return;
+                }
+                var myemail = emails.Find(s => s.email == email).FirstOrDefault();
+                if (myemail != null)
+                {
+                    MessageBox.Show("Your email has been used", "Invalid email");
+                    return;
+                }
                 ImageConverter imgCon = new ImageConverter();
                 var avatar = (byte[])imgCon.ConvertTo(avatarBox.Image, typeof(byte[]));
-                var myAcc = new Account() { username = usernameBox.Text, password = passwordBox.Text, connected = true, typing = false, avatar = avatar };
-                var task = accounts.InsertOneAsync(myAcc);
-                var roomJoin = new Room_Join() { account = myAcc, database = database, client = client, accounts = accounts };
-                roomJoin.Closed += (s, args) => this.Close();
-                await task;
+                var myAcc = new Account() { username = usernameBox.Text, password = passwordBox.Text, connected = true, typing = false, avatar = avatar, email = email };
+                var validation = new Validation() { signup = this, account = myAcc };
                 this.Hide();
-                roomJoin.Show();
+                validation.Show();
             }
             catch (Exception)
             {
-                MessageBox.Show("Your username has been taken", "Invalid username");
+                MessageBox.Show("An error occured. Please try again.", "Error");
                 return;
             }
         }
@@ -141,6 +153,26 @@ namespace Chat_Room
                     avatarBox.Image = img;
                 }
             }
+        }
+
+        private bool ValidateEmail()
+        {
+            email = emailBox.Text.Trim();
+            Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+            Match match = regex.Match(email);
+            if (match.Success)
+            {
+                return true;
+            }  
+            else
+            {
+                return false;
+            }
+        }
+
+        private void Sign_Up_Load(object sender, EventArgs e)
+        {
+            emails = database.GetCollection<Email>("emails");
         }
     }
 }

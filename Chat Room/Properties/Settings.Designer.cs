@@ -22,5 +22,42 @@ namespace Chat_Room.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("mongodb+srv://<username>:<password>@cluster0.ja87m.mongodb.net/myFirstDatabase?re" +
+            "tryWrites=true&w=majority")]
+        public string mongolink {
+            get {
+                return ((string)(this["mongolink"]));
+            }
+            set {
+                this["mongolink"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<emailaddress>")]
+        public string emailaddress {
+            get {
+                return ((string)(this["emailaddress"]));
+            }
+            set {
+                this["emailaddress"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<emailpassword>")]
+        public string emailpassword {
+            get {
+                return ((string)(this["emailpassword"]));
+            }
+            set {
+                this["emailpassword"] = value;
+            }
+        }
     }
 }

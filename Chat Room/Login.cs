@@ -14,9 +14,9 @@ namespace Chat_Room
 {
     public partial class Login : Form
     {
-        private MongoClient client;
-        private IMongoDatabase database;
-        private IMongoCollection<Account> accounts;
+        public MongoClient client;
+        public IMongoDatabase database;
+        public IMongoCollection<Account> accounts;
         public Login()
         {
             InitializeComponent();
@@ -26,7 +26,7 @@ namespace Chat_Room
         {
             try
             {
-                client = new MongoClient("");
+                client = new MongoClient(Properties.Settings.Default.mongolink);
                 database = client.GetDatabase("AppManagement");
                 accounts = database.GetCollection<Account>("accounts");
             }
@@ -60,7 +60,7 @@ namespace Chat_Room
                 {
                     MessageBox.Show("Your username does not exist", "Incorrect username");
                 }
-                else if (myAcc.password != passwordBox.Text)
+                else if (myAcc.password != Convert.ToBase64String(Encoding.UTF8.GetBytes(passwordBox.Text)))
                 {
                     MessageBox.Show("Your password is incorrect", "Incorrect password");
                 }
@@ -121,6 +121,22 @@ namespace Chat_Room
             {
                 LoginAccount();
                 e.SuppressKeyPress = true;
+            }
+        }
+
+        private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            var myAcc = accounts.Find(s => s.username == usernameBox.Text).FirstOrDefault();
+            if (myAcc is null)
+            {
+                MessageBox.Show("Your username does not exist", "Incorrect username");
+            }
+            else
+            {
+                var validation = new Validation() { signin = this, account = myAcc };
+                validation.FormClosed += (s, args) => this.Reload();
+                this.Hide();
+                validation.Show();
             }
         }
     }

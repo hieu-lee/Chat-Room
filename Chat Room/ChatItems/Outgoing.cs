@@ -12,7 +12,6 @@ namespace Chat_Room.ChatItems
 {
     public partial class Outgoing : UserControl
     {
-        private Image image = Properties.Resources.reply;
         public string username
         {
             get
