@@ -25,8 +25,8 @@ namespace Chat_Room.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("mongodb+srv://<username>:<password>@cluster0.ja87m.mongodb.net/myFirstDatabase?re" +
-            "tryWrites=true&w=majority")]
+        [global::System.Configuration.DefaultSettingValueAttribute("mongodb+srv://izumi_sagiri:plh0801@cluster0.ja87m.mongodb.net/myFirstDatabase?ret" +
+            "ryWrites=true&w=majority")]
         public string mongolink {
             get {
                 return ((string)(this["mongolink"]));
@@ -38,7 +38,7 @@ namespace Chat_Room.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<emailaddress>")]
+        [global::System.Configuration.DefaultSettingValueAttribute("bobleechatroom@gmail.com")]
         public string emailaddress {
             get {
                 return ((string)(this["emailaddress"]));
@@ -50,7 +50,7 @@ namespace Chat_Room.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<emailpassword>")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Bob@2002")]
         public string emailpassword {
             get {
                 return ((string)(this["emailpassword"]));
