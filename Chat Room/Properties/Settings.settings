@@ -3,13 +3,13 @@
   <Profiles />
   <Settings>
     <Setting Name="mongolink" Type="System.String" Scope="User">
-      <Value Profile="(Default)">mongodb+srv://izumi_sagiri:plh0801@cluster0.ja87m.mongodb.net/myFirstDatabase?retryWrites=true&amp;w=majority</Value>
+      <Value Profile="(Default)">mongodb+srv://&lt;username&gt;:&lt;password&gt;@cluster0.ja87m.mongodb.net/myFirstDatabase?retryWrites=true&amp;w=majority</Value>
     </Setting>
     <Setting Name="emailaddress" Type="System.String" Scope="User">
-      <Value Profile="(Default)">bobleechatroom@gmail.com</Value>
+      <Value Profile="(Default)">&lt;emailaddress&gt;</Value>
     </Setting>
     <Setting Name="emailpassword" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Bob@2002</Value>
+      <Value Profile="(Default)">&lt;emailpassword&gt;</Value>
     </Setting>
   </Settings>
 </SettingsFile>

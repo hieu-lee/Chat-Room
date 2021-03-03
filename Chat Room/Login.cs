@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,6 +39,38 @@ namespace Chat_Room
             }
         }
 
+        private string Encrypt(string textToEncrypt)
+        {
+            try
+            {
+                string ToReturn = "";
+                string publickey = "";
+                string secretkey = "";
+                byte[] secretkeyByte = { };
+                secretkeyByte = System.Text.Encoding.UTF8.GetBytes(secretkey);
+                byte[] publickeybyte = { };
+                publickeybyte = System.Text.Encoding.UTF8.GetBytes(publickey);
+                MemoryStream ms = null;
+                CryptoStream cs = null;
+                byte[] inputbyteArray = System.Text.Encoding.UTF8.GetBytes(textToEncrypt);
+                using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
+                {
+                    ms = new MemoryStream();
+                    cs = new CryptoStream(ms, des.CreateEncryptor(publickeybyte, secretkeyByte), CryptoStreamMode.Write);
+                    cs.Write(inputbyteArray, 0, inputbyteArray.Length);
+                    cs.FlushFinalBlock();
+                    ToReturn = Convert.ToBase64String(ms.ToArray());
+                }
+                return ToReturn;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex.InnerException);
+            }
+        }
+
+
+
         private async void LoginAccount()
         {
             if (string.IsNullOrWhiteSpace(usernameBox.Text) || string.IsNullOrWhiteSpace(passwordBox.Text))
@@ -60,7 +94,7 @@ namespace Chat_Room
                 {
                     MessageBox.Show("Your username does not exist", "Incorrect username");
                 }
-                else if (myAcc.password != Convert.ToBase64String(Encoding.UTF8.GetBytes(passwordBox.Text)))
+                else if (myAcc.password != Encrypt(Convert.ToBase64String(Encoding.UTF8.GetBytes(passwordBox.Text))))
                 {
                     MessageBox.Show("Your password is incorrect", "Incorrect password");
                 }

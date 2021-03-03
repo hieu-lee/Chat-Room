@@ -8,6 +8,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -131,7 +132,7 @@ namespace Chat_Room
             var room = chatRooms.Find(s => s.Id == id).FirstOrDefault();
             if (room != null)
             {
-                if (!room.state && room.password != Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)))
+                if (!room.state && room.password != Encrypt(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass))))
                 {
                     MessageBox.Show("Your room's password is incorrect, please re-type the room's password", "Incorrect room's password");
                     return;
@@ -217,6 +218,36 @@ namespace Chat_Room
             JoinRoom(id, pass);
         }
 
+        private string Encrypt(string textToEncrypt)
+        {
+            try
+            {
+                string ToReturn = "";
+                string publickey = "";
+                string secretkey = "";
+                byte[] secretkeyByte = { };
+                secretkeyByte = System.Text.Encoding.UTF8.GetBytes(secretkey);
+                byte[] publickeybyte = { };
+                publickeybyte = System.Text.Encoding.UTF8.GetBytes(publickey);
+                MemoryStream ms = null;
+                CryptoStream cs = null;
+                byte[] inputbyteArray = System.Text.Encoding.UTF8.GetBytes(textToEncrypt);
+                using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
+                {
+                    ms = new MemoryStream();
+                    cs = new CryptoStream(ms, des.CreateEncryptor(publickeybyte, secretkeyByte), CryptoStreamMode.Write);
+                    cs.Write(inputbyteArray, 0, inputbyteArray.Length);
+                    cs.FlushFinalBlock();
+                    ToReturn = Convert.ToBase64String(ms.ToArray());
+                }
+                return ToReturn;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex.InnerException);
+            }
+        }
+
         private async void CreateRoom(string id, string pass, string name)
         {
             try
@@ -228,7 +259,7 @@ namespace Chat_Room
                 }
                 else
                 {
-                    myRoom = new ChatRoom() { Id = id, name = name, password = Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)) };
+                    myRoom = new ChatRoom() { Id = id, name = name, password = Encrypt(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass))) };
                 }
                 var task1 = chatRooms.InsertOneAsync(myRoom);
                 account.rooms.Add(id);

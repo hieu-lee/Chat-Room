@@ -45,13 +45,13 @@ namespace Chat_Room
         public IMongoCollection<Account> accounts;
         private Emoji emoji = new Emoji();
 
-        public string Encrypt(string textToEncrypt)
+        private string Encrypt(string textToEncrypt)
         {
             try
             {
                 string ToReturn = "";
-                string publickey = "phamleha";
-                string secretkey = "hiulebeo";
+                string publickey = "";
+                string secretkey = "";
                 byte[] secretkeyByte = { };
                 secretkeyByte = System.Text.Encoding.UTF8.GetBytes(secretkey);
                 byte[] publickeybyte = { };
@@ -75,7 +75,7 @@ namespace Chat_Room
             }
         }
 
-        public string Decrypt(string textToDecrypt)
+        private string Decrypt(string textToDecrypt)
         {
             try
             {
@@ -228,6 +228,7 @@ namespace Chat_Room
                     {
                         try
                         {
+                            m.content = Decrypt(m.content);
                             m.content = Base64StringDecode(m.content);
                             task1 = Task.Factory.StartNew(() => AddIncoming(m.content, m.username));
                         }
@@ -610,7 +611,7 @@ namespace Chat_Room
             if (open.ShowDialog() == DialogResult.OK)
             {
                 long length = new System.IO.FileInfo(open.FileName).Length;
-                if (length > 5500000)
+                if (length > 10000000)
                 {
                     MessageBox.Show("The image is too large");
                     return;

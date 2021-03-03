@@ -4,10 +4,12 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
@@ -90,6 +92,7 @@ namespace Chat_Room
         {
             var mail = new Email() { email = email };
             account.password = Convert.ToBase64String(Encoding.UTF8.GetBytes(account.password));
+            account.password = Encrypt(account.password);
             var task = signup.accounts.InsertOneAsync(account);
             var task1 = signup.emails.InsertOneAsync(mail);
             var roomJoin = new Room_Join() { account = account, database = signup.database, client = signup.client, accounts = signup.accounts };
@@ -111,6 +114,68 @@ namespace Chat_Room
             return decodedString;
         }
 
+        private string Encrypt(string textToEncrypt)
+        {
+            try
+            {
+                string ToReturn = "";
+                string publickey = "";
+                string secretkey = "";
+                byte[] secretkeyByte = { };
+                secretkeyByte = System.Text.Encoding.UTF8.GetBytes(secretkey);
+                byte[] publickeybyte = { };
+                publickeybyte = System.Text.Encoding.UTF8.GetBytes(publickey);
+                MemoryStream ms = null;
+                CryptoStream cs = null;
+                byte[] inputbyteArray = System.Text.Encoding.UTF8.GetBytes(textToEncrypt);
+                using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
+                {
+                    ms = new MemoryStream();
+                    cs = new CryptoStream(ms, des.CreateEncryptor(publickeybyte, secretkeyByte), CryptoStreamMode.Write);
+                    cs.Write(inputbyteArray, 0, inputbyteArray.Length);
+                    cs.FlushFinalBlock();
+                    ToReturn = Convert.ToBase64String(ms.ToArray());
+                }
+                return ToReturn;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex.InnerException);
+            }
+        }
+
+        private string Decrypt(string textToDecrypt)
+        {
+            try
+            {
+                string ToReturn = "";
+                string publickey = "";
+                string privatekey = "";
+                byte[] privatekeyByte = { };
+                privatekeyByte = System.Text.Encoding.UTF8.GetBytes(privatekey);
+                byte[] publickeybyte = { };
+                publickeybyte = System.Text.Encoding.UTF8.GetBytes(publickey);
+                MemoryStream ms = null;
+                CryptoStream cs = null;
+                byte[] inputbyteArray = new byte[textToDecrypt.Replace(" ", "+").Length];
+                inputbyteArray = Convert.FromBase64String(textToDecrypt.Replace(" ", "+"));
+                using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
+                {
+                    ms = new MemoryStream();
+                    cs = new CryptoStream(ms, des.CreateDecryptor(publickeybyte, privatekeyByte), CryptoStreamMode.Write);
+                    cs.Write(inputbyteArray, 0, inputbyteArray.Length);
+                    cs.FlushFinalBlock();
+                    Encoding encoding = Encoding.UTF8;
+                    ToReturn = encoding.GetString(ms.ToArray());
+                }
+                return ToReturn;
+            }
+            catch (Exception ae)
+            {
+                throw new Exception(ae.Message, ae.InnerException);
+            }
+        }
+
         private void bunifuButton1_Click(object sender, EventArgs e)
         {
             if (bunifuTextBox1.Text == code.ToString())
@@ -119,7 +184,7 @@ namespace Chat_Room
                 {
                     if (signup is null)
                     {
-                        MessageBox.Show($"Your password is {Base64StringDecode(account.password)}", "Successful verification");
+                        MessageBox.Show($"Your password is {Base64StringDecode(Decrypt(account.password))}", "Successful verification");
                         LogIn();
                     }
                     else
